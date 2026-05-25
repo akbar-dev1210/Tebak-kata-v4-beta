@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Cari Kata Nusantara - Versi Koreksi</title>
+    <title>Game Cari Kata Nusantara - Fixed Version</title>
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -161,31 +161,32 @@
     </div>
 
     <script>
-        // Data Level sesuai Koreksi Ukuran Maksimal 9x9 & Penyesuaian Panjang Kata
+        // Data Level dengan aturan ukuran grid baru sesuai koreksi:
+        // Level 1-3 = 7x7 | Level 4-6 = 8x8 | Level 7-10 = 9x9
         const levels = [
-            { level: 1, size: 5, theme: "Benda Kelas", words: ["BUKU", "PENA", "MEJA", "TAS"] },
-            { level: 2, size: 5, theme: "Nama Buah", words: ["APEL", "MANGGA", "PISANG", "JERUK"] },
-            { level: 3, size: 6, theme: "Hewan", words: ["SINGA", "GAJAH", "RUSA", "KUDA", "AYAM"] },
-            { level: 4, size: 6, theme: "Warna", words: ["MERAH", "HIJAU", "BIRU", "HITAM", "PUTIH"] },
-            { level: 5, size: 7, theme: "Kendaraan", words: ["KAPAL", "MOTOR", "MOBIL", "KERETA", "SEPEDA"] },
-            { level: 6, size: 7, theme: "Kota Indo", words: ["MEDAN", "PADANG", "BOGOR", "MALANG", "BEKASI"] },
-            { level: 7, size: 8, theme: "Organ Tubuh", words: ["JANTUNG", "LAMBUNG", "GINJAL", "OTAK", "KULIT", "MATA"] },
-            { level: 8, size: 8, theme: "Sejarah", words: ["CANDI", "RAJA", "ARCA", "SUMPAH", "PRASASTI"] },
-            { level: 9, size: 8, theme: "Teknologi", words: ["KOMPUTER", "ROBOT", "GAWAI", "SISTEM", "INTERNET"] },
-            { level: 10, size: 9, theme: "Organel Sel", words: ["RIBOSOM", "LISOSOM", "VAKUOLA", "KLOROFIL", "NUKLEUS"] }
+            { level: 1, size: 7, theme: "Benda Kelas", words: ["BUKU", "PENA", "MEJA", "PAPAN"] },
+            { level: 2, size: 7, theme: "Nama Buah", words: ["APEL", "MANGGA", "PISANG", "JERUK"] },
+            { level: 3, size: 7, theme: "Nama Hewan", words: ["SINGA", "GAJAH", "RUSA", "ZEBRA", "AYAM"] },
+            { level: 4, size: 8, theme: "Warna", words: ["MERAH", "HIJAU", "BIRU", "HITAM", "PUTIH", "KUNING"] },
+            { level: 5, size: 8, theme: "Kendaraan", words: ["KAPAL", "MOTOR", "MOBIL", "KERETA", "SEPEDA", "PESAWAT"] },
+            { level: 6, size: 8, theme: "Kota Indo", words: ["MEDAN", "PADANG", "BOGOR", "MALANG", "BEKASI", "JAKARTA"] },
+            { level: 7, size: 9, theme: "Organ Tubuh", words: ["JANTUNG", "LAMBUNG", "GINJAL", "OTAK", "KULIT", "MATA"] },
+            { level: 8, size: 9, theme: "Sejarah", words: ["CANDI", "RAJA", "ARCA", "SUMPAH", "PRASASTI", "KERAJAAN"] },
+            { level: 9, size: 9, theme: "Teknologi", words: ["KOMPUTER", "ROBOT", "GAWAI", "SISTEM", "INTERNET", "SOFTWARE"] },
+            { level: 10, size: 9, theme: "Organel Sel", words: ["RIBOSOM", "LISOSOM", "VAKUOLA", "KLOROFIL", "NUKLEUS", "SITOPLASMA"] }
         ];
 
         let currentLevelIndex = 0;
         let isMusicPlaying = false;
         let foundWords = [];
         let gridMatrix = [];
-        let startCell = null; // Menyimpan huruf pertama yang diklik
+        let startCell = null;
         
         let timeRemaining = 0;
         let timerInterval = null;
         const bgMusic = document.getElementById("bgMusic");
 
-        // Solusi Bug 1: Paksa Musik Berputar di Klik Pertama Apapun di Layar Game
+        // Memastikan Musik Berputar di Klik Pertama Apapun di Layar Game
         document.body.addEventListener('click', function() {
             if (!isMusicPlaying) {
                 playBacksound();
@@ -305,15 +306,15 @@
                 wordsContainer.appendChild(div);
             });
 
-            // Inisialisasi Matrix Kosong Sesuai Batasan Ukuran Baru (Maks 9x9)
+            // Membuat Matrix Kosong Sesuai Ukuran yang Baru
             gridMatrix = Array(levelData.size).fill(null).map(() => Array(levelData.size).fill(""));
 
-            // Selipkan kata secara acak (Mendatar, Menurun, atau Diagonal Berurutan)
+            // Memasukkan kata ke dalam matriks secara acak
             levelData.words.forEach(word => {
                 placeWordRandomly(word, levelData.size);
             });
 
-            // Isi kotak sisa yang kosong dengan huruf acak
+            // Isi kotak kosong dengan huruf acak
             const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             for (let r = 0; r < levelData.size; r++) {
                 for (let c = 0; c < levelData.size; c++) {
@@ -323,7 +324,7 @@
                 }
             }
 
-            // Gambar Grid ke HTML
+            // Render ke HTML Grid
             const gridContainer = document.getElementById("grid");
             gridContainer.innerHTML = "";
             gridContainer.style.gridTemplateColumns = `repeat(${levelData.size}, 1fr)`;
@@ -351,7 +352,7 @@
             let placed = false;
             let attempts = 0;
 
-            while (!placed && attempts < 150) {
+            while (!placed && attempts < 200) {
                 const dir = directions[Math.floor(Math.random() * directions.length)];
                 const startRow = Math.floor(Math.random() * size);
                 const startCol = Math.floor(Math.random() * size);
@@ -381,23 +382,20 @@
             }
         }
 
-        // ================= LOGIKA PILIHAN GARIS LURUS (KOREKSI POIN 2) =================
+        // ================= LOGIKA PILIHAN SELEKSI HURUF =================
         function handleCellClick(cell, r, c) {
             if (cell.classList.contains("found")) return;
 
             if (startCell === null) {
-                // Klik Huruf Pertama
                 startCell = { cell, row: r, col: c };
                 cell.classList.add("start-selected");
             } else {
-                // Klik Huruf Terakhir -> Proses Tarik Garis Lurus
                 const endRow = r;
                 const endCol = c;
                 
                 const dr = endRow - startCell.row;
                 const dc = endCol - startCell.col;
 
-                // Cek apakah membentuk garis lurus (Kanan, Bawah, atau Diagonal Sempurna)
                 const isHorizontal = dr === 0;
                 const isVertical = dc === 0;
                 const isDiagonal = Math.abs(dr) === Math.abs(dc);
@@ -411,7 +409,6 @@
                     let letters = [];
                     let cellsInLine = [];
 
-                    // Ambil semua huruf sepanjang garis lurus tersebut
                     while (true) {
                         letters.push(gridMatrix[currR][currC]);
                         const targetCell = document.querySelector(`[data-row='${currR}'][data-col='${currC}']`);
@@ -427,13 +424,11 @@
                     const levelData = levels[currentLevelIndex];
                     let matchFound = false;
 
-                    // Validasi kata dengan database level
                     levelData.words.forEach(word => {
                         if ((formedWord === word || reversedWord === word) && !foundWords.includes(word)) {
                             foundWords.push(word);
                             matchFound = true;
                             
-                            // Warnai Garis Menjadi Hijau Sempurna
                             cellsInLine.forEach(cEl => {
                                 cEl.classList.remove("start-selected");
                                 cEl.classList.add("found");
@@ -446,7 +441,6 @@
                         startCell.cell.classList.remove("start-selected");
                     }
 
-                    // Cek Kelulusan Level
                     if (foundWords.length === levelData.words.length) {
                         setTimeout(() => {
                             currentLevelIndex++;
@@ -460,11 +454,10 @@
                         }, 1000);
                     }
                 } else {
-                    // Jika tidak lurus, batalkan seleksi awal
                     startCell.cell.classList.remove("start-selected");
                 }
                 
-                startCell = null; // Reset pointer klik awal
+                startCell = null;
             }
         }
 
