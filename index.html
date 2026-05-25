@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Cari Kata Nusantara - Versi 1.6</title>
+    <title>Game Cari Kata Nusantara - Versi 1.5</title>
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -28,8 +28,6 @@
             text-align: center;
             padding: 20px;
             transition: background 0.3s, color 0.3s;
-            position: relative;
-            overflow-x: hidden;
         }
         .container {
             background-color: var(--container-color);
@@ -39,7 +37,6 @@
             width: 100%;
             max-width: 700px;
             position: relative;
-            z-index: 2;
         }
         h1 { color: var(--highlight-color); margin-bottom: 20px; }
         button, select {
@@ -69,25 +66,24 @@
             padding: 10px;
             border-radius: 8px;
             display: inline-grid;
-            position: relative;
         }
         .cell {
             width: 36px; height: 36px;
             background-color: var(--bg-color);
             display: flex; justify-content: center; align-items: center;
             font-weight: bold; font-size: 16px; cursor: pointer;
-            border-radius: 4px; transition: background-color 0.2s;
-            position: relative;
+            border-radius: 4px; transition: 0.2s;
         }
+        /* Style prioritas seleksi awal di atas warna found */
         .cell.start-selected { background-color: #f39c12 !important; color: white !important; }
-        .cell.found { color: white; }
+        .cell.found { background-color: #4caf50; color: white; }
 
         .word-list {
             text-align: left; background: var(--accent-color); padding: 15px;
             border-radius: 8px; min-width: 180px; max-height: 380px; overflow-y: auto;
         }
-        .word-item { margin: 8px 0; font-size: 15px; font-weight: bold; color: #a8dadc; transition: 0.3s; }
-        .word-item.crossed { text-decoration: line-through; opacity: 0.6; }
+        .word-item { margin: 8px 0; font-size: 15px; font-weight: bold; color: #a8dadc; }
+        .word-item.crossed { text-decoration: line-through; color: #4caf50; opacity: 0.6; }
 
         #game-screen, #settings-screen, #win-screen, #gameover-screen { display: none; }
         .info-bar { display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;}
@@ -102,34 +98,6 @@
             font-weight: bold;
             letter-spacing: 1px;
         }
-
-        /* Gaya Animasi Partikel Pop */
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 10;
-            animation: popExplode 0.5s ease-out forwards;
-        }
-        @keyframes popExplode {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--mx), var(--my)) scale(0); opacity: 0; }
-        }
-
-        /* Gaya Tampilan Bintang & Scoreboard */
-        .star-container { font-size: 24px; color: #f1c40f; margin: 10px 0; height: 30px; }
-        .highscore-box {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 10px;
-            border-radius: 8px;
-            margin: 15px auto;
-            width: 80%;
-            max-width: 300px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #2ecc71;
-            border: 1px dashed #2ecc71;
-        }
     </style>
 </head>
 <body>
@@ -141,9 +109,7 @@
     <div id="lobby-screen" class="container">
         <h1>Cari Kata<br>Nusantara</h1>
         
-        <div id="highScoreDisplay" class="highscore-box">Rekor Terbaik: Belum Ada</div>
-
-        <label for="timeSelect" style="font-weight: bold;">Pilih Batas Waktu per Level:</label><br>
+        <label for="timeSelect" style="font-weight: bold;">Pilih Batas Waktu:</label><br>
         <select id="timeSelect">
             <option value="300" selected>5 Menit</option>
             <option value="360">6 Menit</option>
@@ -159,7 +125,7 @@
         <button onclick="triggerButtonClick(); showSettings()">Pengaturan</button>
         <button onclick="triggerButtonClick(); exitGame()">Keluar</button>
         
-        <div class="version-tag">VERSION 1.6</div>
+        <div class="version-tag">VERSION 1.5</div>
     </div>
 
     <div id="settings-screen" class="container">
@@ -178,9 +144,6 @@
             <span id="levelDisplay">Level 1</span>
             <span id="timerDisplay">Waktu: 00:00</span>
         </div>
-        
-        <div id="starDisplay" class="star-container"></div>
-
         <div style="color: #a8dadc; margin-bottom: 5px; font-weight: 600;" id="hintDisplay">Tema: -</div>
         <div style="font-size: 13px; color: #f39c12; margin-bottom: 10px;">Cara pilih: Klik huruf awal, lalu klik huruf akhir kata.</div>
         
@@ -205,7 +168,6 @@
     <div id="win-screen" class="container">
         <h1>Selamat! 🎉</h1>
         <p>Kamu luar biasa! Semua level dari yang mudah sampai yang tersulit berhasil kamu pecahkan!</p>
-        <div id="totalTimeResult" style="font-size: 18px; font-weight: bold; margin: 15px; color: #2ecc71;"></div>
         <button onclick="triggerButtonClick(); backToLobby()">Main Lagi</button>
     </div>
 
@@ -223,9 +185,6 @@
             { level: 10, size: 9, theme: "Organel Sel", words: ["RIBOSOM", "LISOSOM", "VAKUOLA", "KLOROFIL", "NUKLEUS", "GOLGI"] }
         ];
 
-        // Daftar warna-warni stabilo unik untuk tiap kata yang ketemu
-        const highlightColors = ["#e94560", "#2ecc71", "#3498db", "#9b59b6", "#f1c40f", "#1abc9c", "#e67e22", "#fd79a8", "#a29bfe"];
-
         let currentLevelIndex = 0;
         let isMusicPlaying = false;
         let foundWords = [];
@@ -233,16 +192,10 @@
         let startCell = null;
         
         let timeRemaining = 0;
-        let maxTimeAllocated = 0;
-        let totalSecondsSpent = 0; // Untuk mencatat scoreboard kumulatif
         let timerInterval = null;
         const bgMusic = document.getElementById("bgMusic");
 
-        // Ambil rekor scoreboard lama saat game dibuka
-        window.onload = function() {
-            showHighScore();
-        };
-
+        // Synthesizer Audio Efek Klik (Web Audio API) tanpa file eksternal
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playClickSound(frequency, duration) {
             try {
@@ -256,7 +209,7 @@
                 gainNode.connect(audioCtx.destination);
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + duration);
-            } catch(e) {}
+            } catch(e) { console.log("AudioContext belum aktif"); }
         }
 
         function triggerButtonClick() { playClickSound(600, 0.08); }
@@ -269,7 +222,7 @@
         });
 
         function playBacksound() {
-            bgMusic.volume = 0.40;
+            bgMusic.volume = 0.40; // Ditambahkan volumenya menjadi lebih kencang sesuai permintaan
             bgMusic.play().then(() => {
                 isMusicPlaying = true;
                 document.getElementById("musicBtn").innerText = "Matikan Musik";
@@ -317,12 +270,11 @@
         function backToLobby() {
             clearInterval(timerInterval);
             hideAllScreens();
-            showHighScore();
             document.getElementById("lobby-screen").style.display = "block";
         }
 
         function backToLobbyWithConfirm() {
-            if(confirm("Apakah Anda yakin ingin keluar? Seluruh rekor speedrun ini akan hangus.")) {
+            if(confirm("Apakah Anda yakin ingin keluar? Progress level ini akan hilang.")) {
                 backToLobby();
             }
         }
@@ -334,13 +286,10 @@
 
         function startGame() {
             playBacksound();
-            maxTimeAllocated = parseInt(document.getElementById("timeSelect").value);
-            timeRemaining = maxTimeAllocated;
-            totalSecondsSpent = 0; 
+            timeRemaining = parseInt(document.getElementById("timeSelect").value);
             currentLevelIndex = 0;
             hideAllScreens();
             document.getElementById("game-screen").style.display = "block";
-            document.getElementById("starDisplay").innerHTML = "";
             
             startTimer();
             loadLevel();
@@ -351,7 +300,6 @@
             updateTimerDisplay();
             timerInterval = setInterval(() => {
                 timeRemaining--;
-                totalSecondsSpent++; // Tambah akumulasi total waktu permainan
                 updateTimerDisplay();
                 if (timeRemaining <= 0) {
                     clearInterval(timerInterval);
@@ -367,6 +315,7 @@
             document.getElementById("timerDisplay").innerText = `Waktu: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
+        // ================= ALGORITMA GENERATOR STABIL =================
         function loadLevel() {
             const levelData = levels[currentLevelIndex];
             document.getElementById("levelDisplay").innerText = "Level " + levelData.level;
@@ -426,8 +375,12 @@
 
         function placeWordRandomly(word, size) {
             const directions = [
-                { r: 0, c: 1 }, { r: 1, c: 0 }, { r: 1, c: 1 }, { r: -1, c: 1 }
+                { r: 0, c: 1 },   // Kanan
+                { r: 1, c: 0 },   // Bawah
+                { r: 1, c: 1 },   // Diagonal Kanan-Bawah
+                { r: -1, c: 1 }   // Diagonal Kanan-Atas
             ];
+            
             let attempts = 0;
             while (attempts < 300) {
                 const dir = directions[Math.floor(Math.random() * directions.length)];
@@ -460,39 +413,9 @@
             return false;
         }
 
-        // ================= FITUR BARU: EFEK PARTIKEL POP =================
-        function createPopEffect(cells) {
-            cells.forEach(cell => {
-                const rect = cell.getBoundingClientRect();
-                for (let i = 0; i < 6; i++) {
-                    const particle = document.createElement('div');
-                    particle.className = 'particle';
-                    
-                    // Ambil warna acak untuk serpihan partikel pop
-                    particle.style.backgroundColor = highlightColors[Math.floor(Math.random() * highlightColors.length)];
-                    
-                    const size = Math.random() * 6 + 4;
-                    particle.style.width = `${sizepx}`;
-                    particle.style.height = `${sizepx}`;
-                    
-                    // Lokasi ledakan di tengah kotak huruf
-                    particle.style.left = `${rect.left + window.scrollX + rect.width / 2}px`;
-                    particle.style.top = `${rect.top + window.scrollY + rect.height / 2}px`;
-                    
-                    // Arah lontaran acak
-                    const angle = Math.random() * Math.PI * 2;
-                    const distance = Math.random() * 40 + 20;
-                    particle.style.setProperty('--mx', `${Math.cos(angle) * distance}px`);
-                    particle.style.setProperty('--my', `${Math.sin(angle) * distance}px`);
-                    
-                    document.body.appendChild(particle);
-                    setTimeout(() => particle.remove(), 500);
-                }
-            });
-        }
-
-        // ================= LOGIKA SELEKSI HURUF + FIX WARNA WARNI MULTI =================
+        // ================= LOGIKA VALIDASI SELEKSI HURUF (FIXED INTERSECTION) =================
         function handleCellClick(cell, r, c) {
+            // FIX: Sel bertanda 'found' sekarang TETAP bisa diklik jika dijadikan ujung awal atau ujung akhir kata lain!
             triggerGridClick();
 
             if (startCell === null) {
@@ -537,25 +460,13 @@
                         if ((formedWord === word || reversedWord === word) && !foundWords.includes(word)) {
                             foundWords.push(word);
                             matchFound = true;
-                            triggerSuccessSound();
+                            triggerSuccessSound(); // Bunyi ting-ting jika tebakan kata benar
                             
-                            // Ambil satu warna acak khusus untuk kata ini
-                            const wordColor = highlightColors[Math.floor(Math.random() * highlightColors.length)];
-
                             cellsInLine.forEach(cEl => {
                                 cEl.classList.remove("start-selected");
                                 cEl.classList.add("found");
-                                // Berikan warna stabilo khusus di background-nya secara dinamis
-                                cEl.style.backgroundColor = wordColor;
                             });
-
-                            // Beri efek coret & warna di daftar kata samping
-                            const wordEl = document.getElementById("word-" + word);
-                            wordEl.classList.add("crossed");
-                            wordEl.style.color = wordColor;
-
-                            // Picu efek ledakan partikel pop di huruf-hurufnya!
-                            createPopEffect(cellsInLine);
+                            document.getElementById("word-" + word).classList.add("crossed");
                         }
                     });
 
@@ -563,62 +474,23 @@
                         startCell.cell.classList.remove("start-selected");
                     }
 
-                    // KONDISI SELESAI SATU LEVEL (Pemberian Bintang)
                     if (foundWords.length === levelData.words.length) {
-                        // Kalkulasi kalkulator bintang berdasarkan sisa waktu level
-                        const timeUsed = maxTimeAllocated - timeRemaining;
-                        let stars = "⭐";
-                        if (timeUsed < maxTimeAllocated * 0.3) stars = "⭐⭐⭐"; // Sangat cepat
-                        else if (timeUsed < maxTimeAllocated * 0.6) stars = "⭐⭐"; // Sedang
-                        
-                        document.getElementById("starDisplay").innerText = "Rating Level: " + stars;
-
                         setTimeout(() => {
                             currentLevelIndex++;
-                            document.getElementById("starDisplay").innerHTML = "";
                             if (currentLevelIndex < levels.length) {
-                                // Reset waktu level kembali penuh untuk level berikutnya
-                                timeRemaining = maxTimeAllocated;
                                 loadLevel();
                             } else {
-                                // TAMAT GAME: Menang seluruh 10 Level!
                                 clearInterval(timerInterval);
                                 hideAllScreens();
-                                
-                                // Kalkulasi total waktu speedrun
-                                const totalMin = Math.floor(totalSecondsSpent / 60);
-                                const totalSec = totalSecondsSpent % 60;
-                                const timeString = `${totalMin} Menit ${totalSec} Detik`;
-                                
-                                document.getElementById("totalTimeResult").innerText = `Total Waktu Selesai: ${timeString}`;
-                                
-                                // Simpan ke Scoreboard lokal HP
-                                const currentRecord = localStorage.getItem("wordSearchHighScore");
-                                if (!currentRecord || totalSecondsSpent < parseInt(currentRecord)) {
-                                    localStorage.setItem("wordSearchHighScore", totalSecondsSpent);
-                                    localStorage.setItem("wordSearchHighScoreStr", timeString);
-                                    alert("🎉 REKOR BARU DICATAT!");
-                                }
-
                                 document.getElementById("win-screen").style.display = "block";
                             }
-                        }, 1200);
+                        }, 1000);
                     }
                 } else {
                     startCell.cell.classList.remove("start-selected");
                 }
                 
                 startCell = null;
-            }
-        }
-
-        // Fungsi menampilkan scoreboard di menu utama
-        function showHighScore() {
-            const recordStr = localStorage.getItem("wordSearchHighScoreStr");
-            if (recordStr) {
-                document.getElementById("highScoreDisplay").innerText = `Rekor Terbaik: ${recordStr}`;
-            } else {
-                document.getElementById("highScoreDisplay").innerText = "Rekor Terbaik: Belum Ada";
             }
         }
 
