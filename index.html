@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Cari Kata Nusantara - Versi 1.4</title>
+    <title>Game Cari Kata Nusantara - Versi 1.5</title>
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -74,7 +74,8 @@
             font-weight: bold; font-size: 16px; cursor: pointer;
             border-radius: 4px; transition: 0.2s;
         }
-        .cell.start-selected { background-color: #f39c12; color: white; }
+        /* Style prioritas seleksi awal di atas warna found */
+        .cell.start-selected { background-color: #f39c12 !important; color: white !important; }
         .cell.found { background-color: #4caf50; color: white; }
 
         .word-list {
@@ -90,7 +91,6 @@
         .theme-options { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 20px 0; }
         .theme-btn { width: 150px; padding: 10px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; text-align: center; font-weight: bold;}
         
-        /* Gaya Teks Logo Versi */
         .version-tag {
             font-size: 12px;
             color: rgba(255, 255, 255, 0.4);
@@ -121,22 +121,22 @@
         </select>
         <br><br>
 
-        <button onclick="startGame()">Mulai Game</button>
-        <button onclick="showSettings()">Pengaturan</button>
-        <button onclick="exitGame()">Keluar</button>
+        <button onclick="triggerButtonClick(); startGame()">Mulai Game</button>
+        <button onclick="triggerButtonClick(); showSettings()">Pengaturan</button>
+        <button onclick="triggerButtonClick(); exitGame()">Keluar</button>
         
-        <div class="version-tag">VERSION 1.4</div>
+        <div class="version-tag">VERSION 1.5</div>
     </div>
 
     <div id="settings-screen" class="container">
         <h1>Pengaturan Tema</h1>
         <div class="theme-options">
-            <div class="theme-btn" style="background:#1a1a2e; color:#fff; border-color:#fff;" onclick="changeTheme('dark')">Hitam Gelap</div>
-            <div class="theme-btn" style="background:#4a4a4a; color:#fff;" onclick="changeTheme('grey')">Abu-Abu</div>
-            <div class="theme-btn" style="background:#f0f2f5; color:#333;" onclick="changeTheme('white')">Putih Terang</div>
+            <div class="theme-btn" style="background:#1a1a2e; color:#fff; border-color:#fff;" onclick="triggerButtonClick(); changeTheme('dark')">Hitam Gelap</div>
+            <div class="theme-btn" style="background:#4a4a4a; color:#fff;" onclick="triggerButtonClick(); changeTheme('grey')">Abu-Abu</div>
+            <div class="theme-btn" style="background:#f0f2f5; color:#333;" onclick="triggerButtonClick(); changeTheme('white')">Putih Terang</div>
         </div>
-        <button onclick="toggleMusic()" id="musicBtn">Matikan Musik</button><br>
-        <button onclick="backToLobby()">Kembali ke Lobi</button>
+        <button onclick="triggerButtonClick(); toggleMusic()" id="musicBtn">Matikan Musik</button><br>
+        <button onclick="triggerButtonClick(); backToLobby()">Kembali ke Lobi</button>
     </div>
 
     <div id="game-screen" class="container">
@@ -155,25 +155,23 @@
             </div>
         </div>
         <br>
-        <button onclick="backToLobbyWithConfirm()" style="width:auto; padding:10px 25px; font-size:15px;">Kembali ke Lobi</button>
+        <button onclick="triggerButtonClick(); backToLobbyWithConfirm()" style="width:auto; padding:10px 25px; font-size:15px;">Kembali ke Lobi</button>
     </div>
 
     <div id="gameover-screen" class="container">
         <h1 style="color: #ff4a4a;">Game Over! ❌</h1>
         <p>Sayang sekali, waktu kamu telah habis.</p>
-        <button onclick="startGame()">Mulai Ulang</button>
-        <button onclick="backToLobby()">Kembali ke Menu</button>
+        <button onclick="triggerButtonClick(); startGame()">Mulai Ulang</button>
+        <button onclick="triggerButtonClick(); backToLobby()">Kembali ke Menu</button>
     </div>
 
     <div id="win-screen" class="container">
         <h1>Selamat! 🎉</h1>
         <p>Kamu luar biasa! Semua level dari yang mudah sampai yang tersulit berhasil kamu pecahkan!</p>
-        <button onclick="backToLobby()">Main Lagi</button>
+        <button onclick="triggerButtonClick(); backToLobby()">Main Lagi</button>
     </div>
 
     <script>
-        // Data Level Presisi (Maks 9x9)
-        // Kata SITOPLASMA diganti dengan GOLGI agar muat sempurna di Grid Level 10
         const levels = [
             { level: 1, size: 7, theme: "Benda Kelas", words: ["BUKU", "PENA", "MEJA", "PAPAN"] },
             { level: 2, size: 7, theme: "Nama Buah", words: ["APEL", "MANGGA", "PISANG", "JERUK"] },
@@ -197,12 +195,34 @@
         let timerInterval = null;
         const bgMusic = document.getElementById("bgMusic");
 
+        // Synthesizer Audio Efek Klik (Web Audio API) tanpa file eksternal
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playClickSound(frequency, duration) {
+            try {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency; 
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + duration);
+            } catch(e) { console.log("AudioContext belum aktif"); }
+        }
+
+        function triggerButtonClick() { playClickSound(600, 0.08); }
+        function triggerGridClick() { playClickSound(450, 0.05); }
+        function triggerSuccessSound() { playClickSound(800, 0.15); setTimeout(() => playClickSound(1200, 0.2), 100); }
+
         document.body.addEventListener('click', function() {
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
             if (!isMusicPlaying) { playBacksound(); }
         });
 
         function playBacksound() {
-            bgMusic.volume = 0.15;
+            bgMusic.volume = 0.40; // Ditambahkan volumenya menjadi lebih kencang sesuai permintaan
             bgMusic.play().then(() => {
                 isMusicPlaying = true;
                 document.getElementById("musicBtn").innerText = "Matikan Musik";
@@ -393,9 +413,10 @@
             return false;
         }
 
-        // ================= LOGIKA VALIDASI SELEKSI HURUF =================
+        // ================= LOGIKA VALIDASI SELEKSI HURUF (FIXED INTERSECTION) =================
         function handleCellClick(cell, r, c) {
-            if (cell.classList.contains("found")) return;
+            // FIX: Sel bertanda 'found' sekarang TETAP bisa diklik jika dijadikan ujung awal atau ujung akhir kata lain!
+            triggerGridClick();
 
             if (startCell === null) {
                 startCell = { cell, row: r, col: c };
@@ -439,6 +460,7 @@
                         if ((formedWord === word || reversedWord === word) && !foundWords.includes(word)) {
                             foundWords.push(word);
                             matchFound = true;
+                            triggerSuccessSound(); // Bunyi ting-ting jika tebakan kata benar
                             
                             cellsInLine.forEach(cEl => {
                                 cEl.classList.remove("start-selected");
