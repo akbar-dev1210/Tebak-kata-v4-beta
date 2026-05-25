@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Cari Kata Nusantara - Versi 1.5</title>
+    <title>Game Cari Kata Nusantara - Versi 1.5.5</title>
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -76,14 +76,14 @@
         }
         /* Style prioritas seleksi awal di atas warna found */
         .cell.start-selected { background-color: #f39c12 !important; color: white !important; }
-        .cell.found { background-color: #4caf50; color: white; }
+        .cell.found { color: white; }
 
         .word-list {
             text-align: left; background: var(--accent-color); padding: 15px;
             border-radius: 8px; min-width: 180px; max-height: 380px; overflow-y: auto;
         }
-        .word-item { margin: 8px 0; font-size: 15px; font-weight: bold; color: #a8dadc; }
-        .word-item.crossed { text-decoration: line-through; color: #4caf50; opacity: 0.6; }
+        .word-item { margin: 8px 0; font-size: 15px; font-weight: bold; color: #a8dadc; transition: color 0.3s; }
+        .word-item.crossed { text-decoration: line-through; opacity: 0.6; }
 
         #game-screen, #settings-screen, #win-screen, #gameover-screen { display: none; }
         .info-bar { display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;}
@@ -125,7 +125,7 @@
         <button onclick="triggerButtonClick(); showSettings()">Pengaturan</button>
         <button onclick="triggerButtonClick(); exitGame()">Keluar</button>
         
-        <div class="version-tag">VERSION 1.5</div>
+        <div class="version-tag">VERSION 1.5.5</div>
     </div>
 
     <div id="settings-screen" class="container">
@@ -185,6 +185,9 @@
             { level: 10, size: 9, theme: "Organel Sel", words: ["RIBOSOM", "LISOSOM", "VAKUOLA", "KLOROFIL", "NUKLEUS", "GOLGI"] }
         ];
 
+        // Palet warna stabilo neon yang kontras dan estetik di background gelap
+        const highlightColors = ["#e94560", "#2ecc71", "#3498db", "#9b59b6", "#f1c40f", "#1abc9c", "#e67e22", "#fd79a8", "#a29bfe"];
+
         let currentLevelIndex = 0;
         let isMusicPlaying = false;
         let foundWords = [];
@@ -195,7 +198,6 @@
         let timerInterval = null;
         const bgMusic = document.getElementById("bgMusic");
 
-        // Synthesizer Audio Efek Klik (Web Audio API) tanpa file eksternal
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playClickSound(frequency, duration) {
             try {
@@ -209,7 +211,7 @@
                 gainNode.connect(audioCtx.destination);
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + duration);
-            } catch(e) { console.log("AudioContext belum aktif"); }
+            } catch(e) {}
         }
 
         function triggerButtonClick() { playClickSound(600, 0.08); }
@@ -222,7 +224,7 @@
         });
 
         function playBacksound() {
-            bgMusic.volume = 0.40; // Ditambahkan volumenya menjadi lebih kencang sesuai permintaan
+            bgMusic.volume = 0.40;
             bgMusic.play().then(() => {
                 isMusicPlaying = true;
                 document.getElementById("musicBtn").innerText = "Matikan Musik";
@@ -315,7 +317,6 @@
             document.getElementById("timerDisplay").innerText = `Waktu: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
-        // ================= ALGORITMA GENERATOR STABIL =================
         function loadLevel() {
             const levelData = levels[currentLevelIndex];
             document.getElementById("levelDisplay").innerText = "Level " + levelData.level;
@@ -367,6 +368,7 @@
                     cell.innerText = gridMatrix[r][c];
                     cell.dataset.row = r;
                     cell.dataset.col = c;
+                    cell.style.backgroundColor = ""; // Reset warna latar belakang saat ganti level
                     cell.onclick = () => handleCellClick(cell, r, c);
                     gridContainer.appendChild(cell);
                 }
@@ -375,12 +377,8 @@
 
         function placeWordRandomly(word, size) {
             const directions = [
-                { r: 0, c: 1 },   // Kanan
-                { r: 1, c: 0 },   // Bawah
-                { r: 1, c: 1 },   // Diagonal Kanan-Bawah
-                { r: -1, c: 1 }   // Diagonal Kanan-Atas
+                { r: 0, c: 1 }, { r: 1, c: 0 }, { r: 1, c: 1 }, { r: -1, c: 1 }
             ];
-            
             let attempts = 0;
             while (attempts < 300) {
                 const dir = directions[Math.floor(Math.random() * directions.length)];
@@ -413,9 +411,8 @@
             return false;
         }
 
-        // ================= LOGIKA VALIDASI SELEKSI HURUF (FIXED INTERSECTION) =================
+        // ================= LOGIKA VALIDASI SELEKSI HURUF (FITUR STABILO WARNA-WARNI) =================
         function handleCellClick(cell, r, c) {
-            // FIX: Sel bertanda 'found' sekarang TETAP bisa diklik jika dijadikan ujung awal atau ujung akhir kata lain!
             triggerGridClick();
 
             if (startCell === null) {
@@ -460,13 +457,22 @@
                         if ((formedWord === word || reversedWord === word) && !foundWords.includes(word)) {
                             foundWords.push(word);
                             matchFound = true;
-                            triggerSuccessSound(); // Bunyi ting-ting jika tebakan kata benar
+                            triggerSuccessSound();
                             
+                            // Ambil satu warna acak yang unik khusus untuk kata ini
+                            const randomColor = highlightColors[Math.floor(Math.random() * highlightColors.length)];
+
                             cellsInLine.forEach(cEl => {
                                 cEl.classList.remove("start-selected");
                                 cEl.classList.add("found");
+                                // Memberikan warna latar belakang stabilo yang acak
+                                cEl.style.backgroundColor = randomColor; 
                             });
-                            document.getElementById("word-" + word).classList.add("crossed");
+
+                            // Berikan warna stabilo yang serasi di daftar teks samping kanan
+                            const wordTextEl = document.getElementById("word-" + word);
+                            wordTextEl.classList.add("crossed");
+                            wordTextEl.style.color = randomColor;
                         }
                     });
 
