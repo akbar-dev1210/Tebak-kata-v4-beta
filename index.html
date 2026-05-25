@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Cari Kata Nusantara - Final Fixed</title>
+    <title>Game Cari Kata Nusantara - Versi 1.4</title>
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -36,6 +36,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             width: 100%;
             max-width: 700px;
+            position: relative;
         }
         h1 { color: var(--highlight-color); margin-bottom: 20px; }
         button, select {
@@ -88,6 +89,15 @@
         
         .theme-options { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 20px 0; }
         .theme-btn { width: 150px; padding: 10px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; text-align: center; font-weight: bold;}
+        
+        /* Gaya Teks Logo Versi */
+        .version-tag {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 25px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
@@ -114,6 +124,8 @@
         <button onclick="startGame()">Mulai Game</button>
         <button onclick="showSettings()">Pengaturan</button>
         <button onclick="exitGame()">Keluar</button>
+        
+        <div class="version-tag">VERSION 1.4</div>
     </div>
 
     <div id="settings-screen" class="container">
@@ -161,6 +173,7 @@
 
     <script>
         // Data Level Presisi (Maks 9x9)
+        // Kata SITOPLASMA diganti dengan GOLGI agar muat sempurna di Grid Level 10
         const levels = [
             { level: 1, size: 7, theme: "Benda Kelas", words: ["BUKU", "PENA", "MEJA", "PAPAN"] },
             { level: 2, size: 7, theme: "Nama Buah", words: ["APEL", "MANGGA", "PISANG", "JERUK"] },
@@ -171,7 +184,7 @@
             { level: 7, size: 9, theme: "Organ Tubuh", words: ["JANTUNG", "LAMBUNG", "GINJAL", "OTAK", "KULIT", "MATA"] },
             { level: 8, size: 9, theme: "Sejarah Nusantara", words: ["CANDI", "RAJA", "ARCA", "SUMPAH", "PRASASTI", "KERAJAAN"] },
             { level: 9, size: 9, theme: "Teknologi", words: ["KOMPUTER", "ROBOT", "GAWAI", "SISTEM", "INTERNET", "SOFTWARE"] },
-            { level: 10, size: 9, theme: "Organel Sel", words: ["RIBOSOM", "LISOSOM", "VAKUOLA", "KLOROFIL", "NUKLEUS", "SITOPLASMA"] }
+            { level: 10, size: 9, theme: "Organel Sel", words: ["RIBOSOM", "LISOSOM", "VAKUOLA", "KLOROFIL", "NUKLEUS", "GOLGI"] }
         ];
 
         let currentLevelIndex = 0;
@@ -282,7 +295,7 @@
             document.getElementById("timerDisplay").innerText = `Waktu: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
-        // ================= ALGORITMA GENERATOR GENERASI KATA ULTRA-STABIL =================
+        // ================= ALGORITMA GENERATOR STABIL =================
         function loadLevel() {
             const levelData = levels[currentLevelIndex];
             document.getElementById("levelDisplay").innerText = "Level " + levelData.level;
@@ -301,7 +314,6 @@
                 wordsContainer.appendChild(div);
             });
 
-            // Loop utama pembuatan ulang matriks jika gagal memuat seluruh kata
             let successfullyPlacedAll = false;
             while (!successfullyPlacedAll) {
                 gridMatrix = Array(levelData.size).fill(null).map(() => Array(levelData.size).fill(""));
@@ -309,13 +321,12 @@
 
                 for (let word of levelData.words) {
                     if (!placeWordRandomly(word, levelData.size)) {
-                        successfullyPlacedAll = false; // Gagal pasang satu kata, reset ulang seluruh matriks
+                        successfullyPlacedAll = false;
                         break;
                     }
                 }
             }
 
-            // Isi sisa slot kosong dengan huruf acak
             const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             for (let r = 0; r < levelData.size; r++) {
                 for (let c = 0; c < levelData.size; c++) {
@@ -325,7 +336,6 @@
                 }
             }
 
-            // Render ke Grid Layar
             const gridContainer = document.getElementById("grid");
             gridContainer.innerHTML = "";
             gridContainer.style.gridTemplateColumns = `repeat(${levelData.size}, 1fr)`;
@@ -376,14 +386,14 @@
                         const nextC = startCol + (i * dir.c);
                         gridMatrix[nextR][nextC] = word[i];
                     }
-                    return true; // Berhasil terpasang aman
+                    return true;
                 }
                 attempts++;
             }
-            return false; // Gagal terpasang di percobaan ini
+            return false;
         }
 
-        // ================= LOGIKA VALIDASI DRAG KLIK LINE =================
+        // ================= LOGIKA VALIDASI SELEKSI HURUF =================
         function handleCellClick(cell, r, c) {
             if (cell.classList.contains("found")) return;
 
